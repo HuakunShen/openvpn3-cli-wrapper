@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# constants
+EMPTY_CONFIG_LINE_COUNT=5
+EXE_NAME=ovpn3
+# make sure openvpn3 is installed
+if [[ -z $(which openvpn3) ]]; then echo "openvpn3 not installed"; exit; fi
+
+function list-sessions() {
+    openvpn3 sessions-list
+}
+function list-configs() {
+    openvpn3 configs-list
+}
+function rename() {
+    openvpn3 config-manage --config $1 --rename $2   
+}
+function import() {
+    openvpn3 config-import --config $1
+    if [[ ! -z $2 ]]; then
+        echo "Rename config $1 to $2."
+        rename $1 $2
+    fi
+}
+function connect() {
+    openvpn3 session-start --config $1
+}
+function disconnect() {
+    openvpn3 session-manage --disconnect --config $1   
+}
+function remove() {
+    openvpn3 config-remove --config $1
+}
+function has-config() {
+    count=$(openvpn3 configs-list | wc -l)
+    if [[ $EMPTY_CONFIG_LINE_COUNT -lt $count ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
+function has-session() {
+    count=$(openvpn3 sessions-list | grep 'No sessions available' | wc -l)
+    if [[ "1" -ne $count ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+function main() {
+    if [[ $1 == "list" ]]; then
+        echo "List Sessions"
+        list-sessions
+        echo
+        echo "List Configs"
+        list-configs
+    elif [[ $1 == "import" ]]; then
+        if [[ ! -z $3 ]]; then
+            echo "Importing $2 as $3."
+            import $2 $3
+        else
+            echo "Importing $2."
+            import $2
+        fi
+        echo "Done!"
+    elif [[ $1 == "rename" ]]; then
+        rename $2 $3
+        echo "Done!"
+    elif [[ $1 == "remove" ]]; then
+        remove $2
+        echo "Done!"
+    elif [[ $1 == "disconnect" ]]; then
+        has-session
+        local res=$?
+        if [[ $res -eq 0 ]]; then
+            echo "No Session to disconnect"        
+        else
+            if [[ -z $2 ]]; then
+                # has session but no config name is given, disconnect all sessions
+                config_names=$(list-sessions | grep 'Config name' | cut -d ':' -f 2)
+                echo "$config_names" | while IFS= read -r line ; do disconnect $line; done
+            else
+                disconnect $2
+            fi
+        fi
+        echo "Done!"
+    elif [[ $1 == "connect" ]]; then
+        has-config
+        local res=$?
+        echo $res
+        if [[ $res -eq "1" ]]; then
+            connect $2
+        else
+            echo "No config to connect to, please import one before connecting."
+        fi
+        echo "Done!"
+    elif [[ $1 == *"help" ]]; then
+        echo "Options Are:"
+        echo "  $EXE_NAME list"
+        echo "  $EXE_NAME import config_file.ovpn"
+        echo "  $EXE_NAME rename config_file.ovpn config_name"
+        echo "  $EXE_NAME remove config_name"
+        echo "  $EXE_NAME disconnect config_name"
+        echo "  $EXE_NAME connect config_name"
+    else
+        echo "No Valid Option"
+    fi
+
+}
+
+main $@
