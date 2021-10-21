@@ -14,6 +14,8 @@ You can import, connect, disconnect ... with the simpliest commands.
 
 ## Installation
 
+Install `openvpn3` first from https://openvpn.net/cloud-docs/openvpn-3-client-for-linux/.
+
 The installation script is [install.sh](./install.sh)
 
 The source code and executable is [ovpn](./ovpn)
