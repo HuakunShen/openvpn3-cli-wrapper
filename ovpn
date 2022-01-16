@@ -94,6 +94,8 @@ function main() {
         else
             echo "No config to connect to, please import one before connecting."
         fi
+    	ip=$(curl ifconfig.co)
+	echo "Your Current IP is: $ip"
         echo "Done!"
     elif [[ $1 == *"help" ]]; then
         echo "Options Are:"
