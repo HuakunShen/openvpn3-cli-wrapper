@@ -16,7 +16,7 @@ function rename() {
     openvpn3 config-manage --config $1 --rename $2   
 }
 function import() {
-    openvpn3 config-import --config $1
+    openvpn3 config-import --config $1 -p
     if [[ ! -z $2 ]]; then
         echo "Rename config $1 to $2."
         rename $1 $2
@@ -49,7 +49,7 @@ function has-session() {
 }
 
 function main() {
-    if [[ $1 == "list" ]]; then
+    if [[ $1 == "list" ]] || [[ $1 == "ls" ]]; then
         echo "List Sessions"
         list-sessions
         echo
@@ -97,8 +97,9 @@ function main() {
     	ip=$(curl ifconfig.co)
 	echo "Your Current IP is: $ip"
         echo "Done!"
-    elif [[ $1 == *"help" ]]; then
+    elif [[ $1 == "--help" ]] || [[ $1 == "-h" ]]; then
         echo "Options Are:"
+        echo "  $EXE_NAME ls"
         echo "  $EXE_NAME list"
         echo "  $EXE_NAME import config_file.ovpn"
         echo "  $EXE_NAME rename config_file.ovpn config_name"
@@ -107,6 +108,7 @@ function main() {
         echo "  $EXE_NAME connect config_name"
     else
         echo "No Valid Option"
+        echo "Use --help option to view the available options"
     fi
 
 }
